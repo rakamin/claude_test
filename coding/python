@@ -1,0 +1,40 @@
+# python
+from bs4 import BeautifulSoup
+import pandas as pd
+from io import StringIO
+
+# Stage 1: Load the html content
+# Replace html_content with the HTML content of table in string format
+html_content = """
+    <table>
+        <thead>
+            <tr>
+                <th>Column name</th>
+                <th>Data type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>`Timestamp`</td>
+                <td>`datetime`</td>
+                <td>Date and time when the event was recorded</td>
+            </tr>
+            <tr>
+                <td>`ActionType`</td>
+                <td>`string`</td>
+                <td>Type of activity that triggered the event</td>
+            </tr>
+            <!-- The other rows go here... -->
+        </tbody>
+    </table>
+"""
+
+# Stage 2: Parse the html content
+soup = BeautifulSoup(html_content, 'html.parser')
+table_html = str(soup.find("table"))
+
+# Stage 3: Read the table into a pandas DataFrame
+df = pd.read_html(StringIO(table_html))[0]
+
+print(df)
