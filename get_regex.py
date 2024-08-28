@@ -12,7 +12,7 @@ assistant = autogen.AssistantAgent(
 
 assistant = autogen.AssistantAgent(
     name="assistant",
-    llm_config={"config_list": [{"model": "claude-3-5-sonnet-20240620", "api_key": os.environ["ANTHROPIC_API_KEY"]}]},
+    llm_config={"config_list": [{"model": "claude-3-5-sonnet-20240620", "api_key": os.environ["ANTHROPIC_API_KEY"],"api_type": "anthropic",}]},
 )
 
 
@@ -37,7 +37,7 @@ user_proxy = autogen.UserProxyAgent(
 
 chat_res = user_proxy.initiate_chat(
     assistant,
-    message="""Create a python code that extracts the table below into a pandas dataframe without simply copying text but by parsing the data. Make sure all the rows are included. Feel free to use any markdown or regex related libraries as needed.
+    message="""Create a python code that extracts the table below into a pandas dataframe using regex. Make sure the data values in the string matches with all the values with the pandas dataframe and make sure to compare the full description text.
    
 | Column name | Data type | Description |
 |-------------|-----------|-------------|
