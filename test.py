@@ -86,18 +86,19 @@ def get_folder_structure(path):
             structure[item] = None
     return structure
 
-def display_tree_structure(structure, path=""):
+def display_tree_structure(structure, path="", level=0):
     for key, value in structure.items():
-        if value is None:  # It's a file
-            if st.button(f"📄 {key}", key=os.path.join(path, key)):
-                st.write(f"Selected file: {os.path.join(path, key)}")
-                file_path = os.path.join(st.session_state.root_path, path, key)
-                with open(file_path, 'r') as f:
-                    content = f.read()
-                st.text_area("File Content", content, height=200)
-        else:  # It's a directory
-            with st.expander(f"📁 {key}"):
-                display_tree_structure(value, os.path.join(path, key))
+        col1, col2 = st.columns([1, 20])
+        with col1:
+            st.write("  " * level + "│")
+        with col2:
+            if value is None:  # It's a file
+                if st.button(f"📄 {key}", key=os.path.join(path, key)):
+                    st.session_state.selected_file = os.path.join(path, key)
+            else:  # It's a directory
+                expanded = st.checkbox(f"📁 {key}", key=f"dir_{os.path.join(path, key)}")
+                if expanded:
+                    display_tree_structure(value, os.path.join(path, key), level + 1)
 
 def main():
     st.title("Data Dictionary Navigator")
@@ -107,10 +108,24 @@ def main():
         create_result = create_sample_data_dictionary(st.session_state.root_path)
         st.success(create_result)
     
+    if 'selected_file' not in st.session_state:
+        st.session_state.selected_file = None
+    
     st.write(f"Navigating data dictionary at: {st.session_state.root_path}")
     
-    structure = get_folder_structure(st.session_state.root_path)
-    display_tree_structure(structure)
+    col1, col2 = st.columns([2, 3])
+    
+    with col1:
+        structure = get_folder_structure(st.session_state.root_path)
+        display_tree_structure(structure)
+    
+    with col2:
+        if st.session_state.selected_file:
+            st.write(f"Selected file: {st.session_state.selected_file}")
+            file_path = os.path.join(st.session_state.root_path, st.session_state.selected_file)
+            with open(file_path, 'r') as f:
+                content = f.read()
+            st.text_area("File Content", content, height=300)
     
     if st.button("Recreate Sample Data Dictionary"):
         shutil.rmtree(st.session_state.root_path)
