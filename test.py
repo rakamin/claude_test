@@ -1,44 +1,7 @@
 import streamlit as st
 import os
-
-def get_folder_structure(path):
-    structure = {}
-    for item in os.listdir(path):
-        item_path = os.path.join(path, item)
-        if os.path.isdir(item_path):
-            structure[item] = get_folder_structure(item_path)
-        else:
-            structure[item] = None
-    return structure
-
-def display_structure(structure, path=""):
-    for key, value in structure.items():
-        if value is None:  # It's a file
-            if st.button(f"📄 {key}", key=os.path.join(path, key)):
-                st.write(f"Selected file: {os.path.join(path, key)}")
-                # Here you can add logic to display file contents or metadata
-        else:  # It's a directory
-            if st.button(f"📁 {key}", key=os.path.join(path, key)):
-                st.write(f"Selected directory: {os.path.join(path, key)}")
-                display_structure(value, os.path.join(path, key))
-
-def main():
-    st.title("Data Dictionary Navigator")
-    
-    # Replace this with the path to your data dictionary folder
-    root_path = "/path/to/your/data/dictionary"
-    
-    structure = get_folder_structure(root_path)
-    display_structure(structure)
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-import os
+import tempfile
+import shutil
 
 def create_sample_data_dictionary(root_path):
     structure = {
@@ -111,7 +74,52 @@ def create_sample_data_dictionary(root_path):
                     f.write(value)
 
     create_structure(root_path, structure)
-    print(f"Sample data dictionary created at: {root_path}")
+    return "Sample data dictionary created successfully!"
 
-# Usage
-# create_sample_data_dictionary("/path/to/your/data/dictionary")
+def get_folder_structure(path):
+    structure = {}
+    for item in os.listdir(path):
+        item_path = os.path.join(path, item)
+        if os.path.isdir(item_path):
+            structure[item] = get_folder_structure(item_path)
+        else:
+            structure[item] = None
+    return structure
+
+def display_structure(structure, path=""):
+    for key, value in structure.items():
+        if value is None:  # It's a file
+            if st.button(f"📄 {key}", key=os.path.join(path, key)):
+                st.write(f"Selected file: {os.path.join(path, key)}")
+                file_path = os.path.join(st.session_state.root_path, path, key)
+                with open(file_path, 'r') as f:
+                    content = f.read()
+                st.text_area("File Content", content, height=200)
+        else:  # It's a directory
+            if st.button(f"📁 {key}", key=os.path.join(path, key)):
+                st.write(f"Selected directory: {os.path.join(path, key)}")
+                st.write("Contents:")
+                display_structure(value, os.path.join(path, key))
+
+def main():
+    st.title("Data Dictionary Navigator")
+    
+    if 'root_path' not in st.session_state:
+        st.session_state.root_path = tempfile.mkdtemp()
+        create_result = create_sample_data_dictionary(st.session_state.root_path)
+        st.success(create_result)
+    
+    st.write(f"Navigating data dictionary at: {st.session_state.root_path}")
+    
+    structure = get_folder_structure(st.session_state.root_path)
+    display_structure(structure)
+    
+    if st.button("Recreate Sample Data Dictionary"):
+        shutil.rmtree(st.session_state.root_path)
+        st.session_state.root_path = tempfile.mkdtemp()
+        create_result = create_sample_data_dictionary(st.session_state.root_path)
+        st.success(create_result)
+        st.experimental_rerun()
+
+if __name__ == "__main__":
+    main()
