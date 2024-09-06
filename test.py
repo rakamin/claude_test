@@ -86,7 +86,7 @@ def get_folder_structure(path):
             structure[item] = None
     return structure
 
-def display_structure(structure, path=""):
+def display_tree_structure(structure, path=""):
     for key, value in structure.items():
         if value is None:  # It's a file
             if st.button(f"📄 {key}", key=os.path.join(path, key)):
@@ -96,10 +96,8 @@ def display_structure(structure, path=""):
                     content = f.read()
                 st.text_area("File Content", content, height=200)
         else:  # It's a directory
-            if st.button(f"📁 {key}", key=os.path.join(path, key)):
-                st.write(f"Selected directory: {os.path.join(path, key)}")
-                st.write("Contents:")
-                display_structure(value, os.path.join(path, key))
+            with st.expander(f"📁 {key}"):
+                display_tree_structure(value, os.path.join(path, key))
 
 def main():
     st.title("Data Dictionary Navigator")
@@ -112,7 +110,7 @@ def main():
     st.write(f"Navigating data dictionary at: {st.session_state.root_path}")
     
     structure = get_folder_structure(st.session_state.root_path)
-    display_structure(structure)
+    display_tree_structure(structure)
     
     if st.button("Recreate Sample Data Dictionary"):
         shutil.rmtree(st.session_state.root_path)
