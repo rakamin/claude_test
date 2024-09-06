@@ -1,138 +1,55 @@
 import streamlit as st
-import os
-import tempfile
-import shutil
+import yaml
+from pathlib import Path
 
-def create_sample_data_dictionary(root_path):
-    structure = {
-        "HR": {
-            "employee_data.csv": "Employee ID,Name,Department,Salary",
-            "performance_reviews": {
-                "2023_reviews.xlsx": "Annual performance review data for 2023",
-                "review_template.docx": "Template for conducting performance reviews"
-            },
-            "policies": {
-                "employee_handbook.pdf": "Company policies and procedures",
-                "leave_policy.txt": "Guidelines for requesting and approving leave"
-            }
-        },
-        "Finance": {
-            "financial_statements": {
-                "income_statement_2023.xlsx": "Annual income statement for 2023",
-                "balance_sheet_2023.xlsx": "Balance sheet as of Dec 31, 2023"
-            },
-            "budgets": {
-                "department_budgets_2024.xlsx": "Projected budgets for all departments",
-                "budget_guidelines.pdf": "Instructions for budget preparation"
-            },
-            "tax_documents": {
-                "tax_return_2023.pdf": "Corporate tax return for 2023",
-                "tax_id_info.txt": "Company tax identification numbers"
-            }
-        },
-        "Marketing": {
-            "campaigns": {
-                "summer_sale_2024.pptx": "Presentation for upcoming summer sale campaign",
-                "social_media_calendar.xlsx": "Planned social media posts for Q2 2024"
-            },
-            "market_research": {
-                "competitor_analysis.pdf": "Detailed analysis of main competitors",
-                "customer_survey_results.csv": "Raw data from recent customer satisfaction survey"
-            },
-            "brand_assets": {
-                "logo_guidelines.pdf": "Official logo usage and brand guidelines",
-                "product_images": {
-                    "product_a.jpg": "High-resolution image of Product A",
-                    "product_b.jpg": "High-resolution image of Product B"
-                }
-            }
-        },
-        "IT": {
-            "network_diagrams": {
-                "company_network.vsdx": "Visio diagram of company network architecture",
-                "server_rack_layout.png": "Diagram of physical server rack layout"
-            },
-            "software_licenses": {
-                "license_inventory.xlsx": "Inventory of all software licenses",
-                "renewal_calendar.pdf": "Schedule of upcoming license renewals"
-            },
-            "security_policies": {
-                "data_protection_policy.docx": "Company data protection and privacy policy",
-                "incident_response_plan.pdf": "Procedures for responding to security incidents"
-            }
-        }
-    }
+def load_yaml(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
 
-    def create_structure(path, structure):
-        for key, value in structure.items():
-            new_path = os.path.join(path, key)
-            if isinstance(value, dict):
-                os.makedirs(new_path, exist_ok=True)
-                create_structure(new_path, value)
-            else:
-                with open(new_path, 'w') as f:
-                    f.write(value)
-
-    create_structure(root_path, structure)
-    return "Sample data dictionary created successfully!"
-
-def get_folder_structure(path):
-    structure = {}
-    for item in os.listdir(path):
-        item_path = os.path.join(path, item)
-        if os.path.isdir(item_path):
-            structure[item] = get_folder_structure(item_path)
+def display_yaml_structure(data, prefix=''):
+    for key, value in data.items():
+        if isinstance(value, dict):
+            if st.button(f"{prefix}{key}", key=f"{prefix}{key}"):
+                st.write("Scripts:")
+                for script in value.keys():
+                    st.write(f"- {script}")
         else:
-            structure[item] = None
-    return structure
-
-def display_tree_structure(structure, path="", level=0):
-    for key, value in structure.items():
-        col1, col2 = st.columns([1, 20])
-        with col1:
-            st.write("  " * level + "│")
-        with col2:
-            if value is None:  # It's a file
-                if st.button(f"📄 {key}", key=os.path.join(path, key)):
-                    st.session_state.selected_file = os.path.join(path, key)
-            else:  # It's a directory
-                expanded = st.checkbox(f"📁 {key}", key=f"dir_{os.path.join(path, key)}")
-                if expanded:
-                    display_tree_structure(value, os.path.join(path, key), level + 1)
+            st.write(f"{prefix}{key}")
 
 def main():
-    st.title("Data Dictionary Navigator")
+    st.set_page_config(layout="wide")
     
-    if 'root_path' not in st.session_state:
-        st.session_state.root_path = tempfile.mkdtemp()
-        create_result = create_sample_data_dictionary(st.session_state.root_path)
-        st.success(create_result)
-    
-    if 'selected_file' not in st.session_state:
-        st.session_state.selected_file = None
-    
-    st.write(f"Navigating data dictionary at: {st.session_state.root_path}")
-    
-    col1, col2 = st.columns([2, 3])
+    col1, col2 = st.columns([4, 1])
     
     with col1:
-        structure = get_folder_structure(st.session_state.root_path)
-        display_tree_structure(structure)
-    
+        st.title("Main App Operations")
+        # Your main app operations go here
+        st.write("Your main app content goes here.")
+
     with col2:
-        if st.session_state.selected_file:
-            st.write(f"Selected file: {st.session_state.selected_file}")
-            file_path = os.path.join(st.session_state.root_path, st.session_state.selected_file)
-            with open(file_path, 'r') as f:
-                content = f.read()
-            st.text_area("File Content", content, height=300)
-    
-    if st.button("Recreate Sample Data Dictionary"):
-        shutil.rmtree(st.session_state.root_path)
-        st.session_state.root_path = tempfile.mkdtemp()
-        create_result = create_sample_data_dictionary(st.session_state.root_path)
-        st.success(create_result)
-        st.experimental_rerun()
+        st.title("YAML Source")
+        yaml_file = "example_structure.yaml"  # We'll create this file
+        
+        if st.button("Source"):
+            yaml_data = load_yaml(yaml_file)
+            st.write("YAML Structure:")
+            display_yaml_structure(yaml_data)
 
 if __name__ == "__main__":
+    # Create example YAML file
+    example_yaml = """
+    source:
+      team_a:
+        script1: SELECT * FROM table_a
+        script2: SELECT COUNT(*) FROM table_b
+      team_b:
+        script3: SELECT DISTINCT column FROM table_c
+      team_c:
+        script4: SELECT AVG(column) FROM table_d
+        script5: SELECT * FROM table_e WHERE condition
+    """
+    
+    with open("example_structure.yaml", "w") as f:
+        f.write(example_yaml)
+    
     main()
