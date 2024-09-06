@@ -35,4 +35,28 @@ def main():
         
         if st.button("Source", key="source_button"):
             yaml_data = load_yaml(yaml_file)
-      
+            st.write("YAML Structure:")
+            st.write("Debug - YAML data:", yaml_data)  # Debug print
+            if 'source' in yaml_data:
+                display_yaml_structure(yaml_data['source'])
+            else:
+                st.error("Error: 'source' key not found in YAML data")
+
+if __name__ == "__main__":
+    # Create example YAML file
+    example_yaml = """
+source:
+  team_a:
+    script1: SELECT * FROM table_a
+    script2: SELECT COUNT(*) FROM table_b
+  team_b:
+    script3: SELECT DISTINCT column FROM table_c
+  team_c:
+    script4: SELECT AVG(column) FROM table_d
+    script5: SELECT * FROM table_e WHERE condition
+"""
+    
+    with open("example_structure.yaml", "w") as f:
+        f.write(example_yaml)
+    
+    main()
