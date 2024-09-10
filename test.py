@@ -32,11 +32,21 @@ def main():
         
         # Sidebar for navigation
         st.sidebar.title("Navigation")
-        page = st.sidebar.radio("Go to", ["Home", "About"])
+        
+        # Use session state to keep track of the current page
+        if 'page' not in st.session_state:
+            st.session_state.page = 'Home'
 
-        if page == "Home":
+        # Create clickable links for navigation
+        if st.sidebar.button('Home'):
+            st.session_state.page = 'Home'
+        if st.sidebar.button('About'):
+            st.session_state.page = 'About'
+
+        # Display the selected page
+        if st.session_state.page == 'Home':
             home_page()
-        elif page == "About":
+        elif st.session_state.page == 'About':
             about_page()
 
     elif authentication_status == False:
