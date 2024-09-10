@@ -1,62 +1,58 @@
 import streamlit as st
+import streamlit_authenticator as stauth
 import yaml
-from pathlib import Path
+from yaml.loader import SafeLoader
 
-def load_yaml(file_path):
-    with open(file_path, 'r') as file:
-        return yaml.safe_load(file)
-
-def display_yaml_structure(data, prefix=''):
-    if not isinstance(data, dict):
-        st.error(f"Expected a dictionary, but got {type(data)}. Data: {data}")
-        return
-
-    for key, value in data.items():
-        if isinstance(value, dict):
-            if st.button(f"{prefix}{key}", key=f"btn_{prefix}{key}"):
-                st.write(f"Contents of {key}:")
-                for script, query in value.items():
-                    st.write(f"- {script}: {query}")
-        else:
-            st.write(f"{prefix}{key}: {value}")
+def load_config():
+    with open('config.yaml') as file:
+        config = yaml.load(file, Loader=SafeLoader)
+    return config
 
 def main():
-    st.set_page_config(layout="wide")
-    
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        st.title("Main App Operations")
-        st.write("Your main app content goes here.")
+    st.set_page_config(page_title="Multi-page Streamlit App", layout="wide")
 
-    with col2:
-        st.title("YAML Source")
-        yaml_file = "example_structure.yaml"
+    # Load configuration
+    config = load_config()
+
+    # Create an authentication object
+    authenticator = stauth.Authenticate(
+        config['credentials'],
+        config['cookie']['name'],
+        config['cookie']['key'],
+        config['cookie']['expiry_days'],
+        config['preauthorized']
+    )
+
+    # Add login widget
+    name, authentication_status, username = authenticator.login('Login', 'main')
+
+    if authentication_status:
+        authenticator.logout('Logout', 'sidebar')
+        st.sidebar.title(f"Welcome {name}")
         
-        if st.button("Source", key="source_button"):
-            yaml_data = load_yaml(yaml_file)
-            st.write("YAML Structure:")
-            st.write("Debug - YAML data:", yaml_data)  # Debug print
-            if 'source' in yaml_data:
-                display_yaml_structure(yaml_data['source'])
-            else:
-                st.error("Error: 'source' key not found in YAML data")
+        # Sidebar for navigation
+        st.sidebar.title("Navigation")
+        page = st.sidebar.radio("Go to", ["Home", "About"])
+
+        if page == "Home":
+            home_page()
+        elif page == "About":
+            about_page()
+
+    elif authentication_status == False:
+        st.error('Username/password is incorrect')
+    elif authentication_status == None:
+        st.warning('Please enter your username and password')
+
+def home_page():
+    st.title("Home Page")
+    st.write("Welcome to the home page of our Streamlit app!")
+    st.write("This is where you can put your main content.")
+
+def about_page():
+    st.title("About Page")
+    st.write("This is the about page of our Streamlit app.")
+    st.write("Here you can provide information about your app or yourself.")
 
 if __name__ == "__main__":
-    # Create example YAML file
-    example_yaml = """
-source:
-  team_a:
-    script1: SELECT * FROM table_a
-    script2: SELECT COUNT(*) FROM table_b
-  team_b:
-    script3: SELECT DISTINCT column FROM table_c
-  team_c:
-    script4: SELECT AVG(column) FROM table_d
-    script5: SELECT * FROM table_e WHERE condition
-"""
-    
-    with open("example_structure.yaml", "w") as f:
-        f.write(example_yaml)
-    
     main()
