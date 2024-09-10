@@ -11,26 +11,27 @@ def load_config():
 def main():
     st.set_page_config(page_title="Multi-page Streamlit App", layout="wide")
 
-    # Custom CSS for OneNote-style navigation
+    # Custom CSS for panel-style navigation
     st.markdown("""
     <style>
-    .stButton > button {
-        width: 100%;
-        background-color: transparent;
-        color: #000000;
-        border: none;
+    .nav-link {
+        padding: 15px 20px;
+        margin: 5px 0;
+        border-radius: 5px 0 0 5px;
+        text-decoration: none;
+        display: block;
         text-align: left;
-        padding: 10px 15px;
         font-size: 16px;
-        border-radius: 0;
+        transition: background-color 0.3s;
     }
-    .stButton > button:hover {
+    .nav-link:hover {
         background-color: #f0f0f0;
     }
-    .stButton > button:focus {
-        background-color: #e0e0e0;
+    .nav-link.active {
+        background-color: #ffffff;
         color: #0078d4;
-        box-shadow: none;
+        font-weight: bold;
+        border-right: 5px solid #0078d4;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -61,13 +62,28 @@ def main():
         if 'page' not in st.session_state:
             st.session_state.page = 'Home'
 
-        # Create OneNote-style navigation buttons
+        # Create panel-style navigation
         pages = ['Home', 'About']
         for page in pages:
-            button_style = "background-color: #e0e0e0; color: #0078d4;" if st.session_state.page == page else ""
-            if st.sidebar.button(page, key=page, help=f"Go to {page} page", 
-                                 on_click=lambda p=page: setattr(st.session_state, 'page', p)):
-                st.rerun()
+            active_class = "active" if st.session_state.page == page else ""
+            if st.sidebar.markdown(f"""
+                <a href="#" class="nav-link {active_class}" id="{page}-link">{page}</a>
+                """, unsafe_allow_html=True):
+                st.session_state.page = page
+                st.experimental_rerun()
+
+        # JavaScript to handle click events
+        st.sidebar.markdown("""
+        <script>
+        const links = document.querySelectorAll('.nav-link');
+        links.forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.streamlitPyRerun();
+            });
+        });
+        </script>
+        """, unsafe_allow_html=True)
 
         # Display the selected page
         if st.session_state.page == 'Home':
