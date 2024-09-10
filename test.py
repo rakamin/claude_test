@@ -67,7 +67,7 @@ def main():
             button_style = "background-color: #e0e0e0; color: #0078d4;" if st.session_state.page == page else ""
             if st.sidebar.button(page, key=page, help=f"Go to {page} page", 
                                  on_click=lambda p=page: setattr(st.session_state, 'page', p)):
-                st.experimental_rerun()
+                st.rerun()
 
         # Display the selected page
         if st.session_state.page == 'Home':
