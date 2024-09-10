@@ -11,6 +11,30 @@ def load_config():
 def main():
     st.set_page_config(page_title="Multi-page Streamlit App", layout="wide")
 
+    # Custom CSS for OneNote-style navigation
+    st.markdown("""
+    <style>
+    .stButton > button {
+        width: 100%;
+        background-color: transparent;
+        color: #000000;
+        border: none;
+        text-align: left;
+        padding: 10px 15px;
+        font-size: 16px;
+        border-radius: 0;
+    }
+    .stButton > button:hover {
+        background-color: #f0f0f0;
+    }
+    .stButton > button:focus {
+        background-color: #e0e0e0;
+        color: #0078d4;
+        box-shadow: none;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
     # Load configuration
     config = load_config()
 
@@ -37,11 +61,13 @@ def main():
         if 'page' not in st.session_state:
             st.session_state.page = 'Home'
 
-        # Create clickable links for navigation
-        if st.sidebar.button('Home'):
-            st.session_state.page = 'Home'
-        if st.sidebar.button('About'):
-            st.session_state.page = 'About'
+        # Create OneNote-style navigation buttons
+        pages = ['Home', 'About']
+        for page in pages:
+            button_style = "background-color: #e0e0e0; color: #0078d4;" if st.session_state.page == page else ""
+            if st.sidebar.button(page, key=page, help=f"Go to {page} page", 
+                                 on_click=lambda p=page: setattr(st.session_state, 'page', p)):
+                st.experimental_rerun()
 
         # Display the selected page
         if st.session_state.page == 'Home':
